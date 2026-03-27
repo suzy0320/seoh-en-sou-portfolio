@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Clone — SEOH EN SOU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg: #f9f9f9;
+        --header-bg: #ffffff;
+        --sidebar-bg: #ffffff;
+        --card-bg: #ffffff;
+        --text: #0f0f0f;
+        --text-sub: #606060;
+        --text-meta: #909090;
+        --border: #e0e0e0;
+        --hover: #f2f2f2;
+        --input-border: #ccc;
+        --shadow: 0 1px 4px rgba(0,0,0,0.06);
+        --shadow-hover: 0 8px 24px rgba(0,0,0,0.12);
+        --badge-bg: #f2f2f2;
+        --badge-active: #0f0f0f;
+        --badge-active-text: #ffffff;
+        --overlay: rgba(0,0,0,0.6);
+        --popup-bg: #ffffff;
+      }
+      [data-theme="dark"] {
+        --bg: #0f0f0f;
+        --header-bg: #212121;
+        --sidebar-bg: #212121;
+        --card-bg: #212121;
+        --text: #f1f1f1;
+        --text-sub: #aaaaaa;
+        --text-meta: #717171;
+        --border: #3f3f3f;
+        --hover: #3f3f3f;
+        --input-border: #555;
+        --shadow: 0 1px 4px rgba(0,0,0,0.3);
+        --shadow-hover: 0 8px 24px rgba(0,0,0,0.5);
+        --badge-bg: #3f3f3f;
+        --badge-active: #f1f1f1;
+        --badge-active-text: #0f0f0f;
+        --overlay: rgba(0,0,0,0.8);
+        --popup-bg: #212121;
+      }
+
+      * { margin:0; padding:0; box-sizing:border-box; transition: background-color 0.3s, color 0.2s, border-color 0.2s; }
+      body { font-family:'Roboto',Arial,sans-serif; background:var(--bg); color:var(--text); }
+
+      /* ── HEADER ── */
+      header {
+        height:60px; background:var(--header-bg);
+        border-bottom:1px solid var(--border);
+        display:flex; align-items:center; padding:0 20px;
+        position:fixed; top:0; width:100%; z-index:100;
+        box-shadow:var(--shadow);
+      }
+      .header-left { display:flex; align-items:center; gap:16px; }
+      .menu-btn {
+        background:none; border:none; font-size:20px;
+        cursor:pointer; color:var(--text); padding:8px;
+        border-radius:50%; transition:background 0.2s;
+      }
+      .menu-btn:hover { background:var(--hover); }
+      .logo { font-size:22px; font-weight:700; color:#ff0000; letter-spacing:-1px; text-decoration:none; }
+
+      .header-center { flex:1; display:flex; justify-content:center; }
+      .search-form { display:flex; }
+      .search-form input {
+        width:440px; height:40px;
+        border:1.5px solid var(--input-border);
+        border-radius:40px 0 0 40px;
+        padding:0 20px; outline:none;
+        font-size:15px; background:var(--header-bg); color:var(--text);
+        transition:border 0.2s;
+      }
+      .search-form input:focus { border-color:#1a73e8; }
+      .search-form button {
+        height:40px; padding:0 18px;
+        border:1.5px solid var(--input-border); border-left:none;
+        border-radius:0 40px 40px 0;
+        background:var(--hover); cursor:pointer; font-size:16px;
+        color:var(--text); transition:background 0.2s;
+      }
+      .search-form button:hover { background:var(--border); }
+
+      .header-right { display:flex; gap:8px; align-items:center; }
+      .icon-btn {
+        background:none; border:none; font-size:22px;
+        cursor:pointer; padding:8px; border-radius:50%;
+        color:var(--text); transition:background 0.2s;
+      }
+      .icon-btn:hover { background:var(--hover); }
+      .dark-toggle {
+        background:none; border:1.5px solid var(--border);
+        padding:6px 14px; border-radius:20px;
+        cursor:pointer; font-size:13px; color:var(--text);
+        font-family:'Roboto',sans-serif; font-weight:500;
+        transition:all 0.2s; white-space:nowrap;
+      }
+      .dark-toggle:hover { background:var(--hover); }
+
+      /* ── LAYOUT ── */
+      .container { display:flex; margin-top:60px; }
+      aside {
+        width:230px; height:calc(100vh - 60px);
+        background:var(--sidebar-bg); padding:12px 8px;
+        position:fixed; border-right:1px solid var(--border);
+        overflow-y:auto; transition:transform 0.3s;
+      }
+      aside.collapsed { transform:translateX(-230px); }
+      aside ul { list-style:none; }
+      aside ul li {
+        padding:10px 16px; border-radius:10px;
+        cursor:pointer; font-size:14px; font-weight:500;
+        color:var(--text); transition:background 0.15s;
+      }
+      aside ul li:first-child { background:var(--hover); font-weight:700; }
+      aside ul li:hover { background:var(--hover); }
+      aside .sidebar-section {
+        font-size:13px; font-weight:700; color:var(--text-sub);
+        padding:16px 16px 8px; letter-spacing:0.3px;
+        border-top:1px solid var(--border); margin-top:8px;
+      }
+
+      main {
+        margin-left:230px; padding:20px 24px; width:100%;
+        transition:margin-left 0.3s;
+      }
+      main.expanded { margin-left:0; }
+
+      /* ── CATEGORY BAR ── */
+      .category-bar {
+        display:flex; gap:8px; margin-bottom:20px;
+        flex-wrap:wrap; position:sticky; top:60px;
+        background:var(--bg); padding:12px 0; z-index:50;
+      }
+      .category-btn {
+        padding:8px 16px; border-radius:8px; border:none;
+        background:var(--badge-bg); font-size:14px; font-weight:500;
+        cursor:pointer; transition:all 0.2s; white-space:nowrap;
+        color:var(--text);
+      }
+      .category-btn:hover { background:var(--border); transform:translateY(-1px); }
+      .category-btn.active {
+        background:var(--badge-active);
+        color:var(--badge-active-text);
+      }
+
+      /* ── SEARCH RESULT BAR ── */
+      .search-result-bar {
+        display:none; align-items:center; gap:12px;
+        margin-bottom:16px; padding:12px 16px;
+        background:var(--card-bg); border:1px solid var(--border);
+        border-radius:8px;
+      }
+      .search-result-bar.visible { display:flex; }
+      .search-result-text { font-size:14px; color:var(--text-sub); }
+      .search-result-text span { color:var(--text); font-weight:500; }
+      .clear-search {
+        background:none; border:1px solid var(--border);
+        padding:4px 12px; border-radius:20px; cursor:pointer;
+        font-size:12px; color:var(--text-sub); transition:all 0.2s;
+      }
+      .clear-search:hover { background:var(--hover); color:var(--text); }
+
+      /* ── VIDEO GRID ── */
+      .video-grid {
+        display:grid; grid-template-columns:repeat(3,1fr); gap:20px;
+      }
+      .video-card {
+        cursor:pointer; border-radius:12px; overflow:hidden;
+        transition:transform 0.2s, box-shadow 0.2s;
+        background:var(--card-bg); box-shadow:var(--shadow);
+      }
+      .video-card:hover {
+        transform:translateY(-4px); box-shadow:var(--shadow-hover);
+      }
+      .video-card.hidden { display:none; }
+
+      .thumbnail {
+        width:100%; aspect-ratio:16/9;
+        border-radius:12px 12px 0 0;
+        position:relative; overflow:hidden;
+      }
+      .video-card:nth-child(1) .thumbnail { background:linear-gradient(135deg,#667eea,#764ba2); }
+      .video-card:nth-child(2) .thumbnail { background:linear-gradient(135deg,#f093fb,#f5576c); }
+      .video-card:nth-child(3) .thumbnail { background:linear-gradient(135deg,#4facfe,#00f2fe); }
+      .video-card:nth-child(4) .thumbnail { background:linear-gradient(135deg,#43e97b,#38f9d7); }
+      .video-card:nth-child(5) .thumbnail { background:linear-gradient(135deg,#fa709a,#fee140); }
+      .video-card:nth-child(6) .thumbnail { background:linear-gradient(135deg,#a18cd1,#fbc2eb); }
+      .video-card:nth-child(7) .thumbnail { background:linear-gradient(135deg,#fd7043,#ff8a65); }
+      .video-card:nth-child(8) .thumbnail { background:linear-gradient(135deg,#26c6da,#00acc1); }
+      .video-card:nth-child(9) .thumbnail { background:linear-gradient(135deg,#66bb6a,#43a047); }
+      .video-card:nth-child(10) .thumbnail { background:linear-gradient(135deg,#ec407a,#e91e63); }
+      .video-card:nth-child(11) .thumbnail { background:linear-gradient(135deg,#ab47bc,#8e24aa); }
+      .video-card:nth-child(12) .thumbnail { background:linear-gradient(135deg,#ffca28,#ffb300); }
+
+      .thumbnail::after {
+        content:'▶'; position:absolute; top:50%; left:50%;
+        transform:translate(-50%,-50%); font-size:36px;
+        color:rgba(255,255,255,0.8); opacity:0; transition:opacity 0.2s;
+      }
+      .video-card:hover .thumbnail::after { opacity:1; }
+      .duration {
+        position:absolute; bottom:8px; right:8px;
+        background:rgba(0,0,0,0.82); color:white;
+        font-size:12px; padding:2px 7px; border-radius:5px;
+        font-weight:700; letter-spacing:0.3px;
+      }
+      .video-info { display:flex; gap:12px; padding:12px; }
+      .avatar {
+        width:38px; height:38px; border-radius:50%;
+        background:linear-gradient(135deg,#ccc,#aaa); flex-shrink:0;
+      }
+      .video-text { flex:1; }
+      .video-title {
+        font-size:14px; font-weight:700; color:var(--text);
+        margin-bottom:5px; line-height:1.4;
+        transition:color 0.2s;
+      }
+      .video-card:hover .video-title { color:#1a73e8; }
+      .channel-name { font-size:13px; color:var(--text-sub); margin-bottom:3px; font-weight:500; }
+      .video-meta { font-size:12px; color:var(--text-meta); }
+
+      /* ── NO RESULTS ── */
+      .no-results {
+        display:none; grid-column:1/-1; text-align:center;
+        padding:80px 20px; color:var(--text-sub);
+      }
+      .no-results.visible { display:block; }
+      .no-results-icon { font-size:48px; margin-bottom:16px; }
+      .no-results h3 { font-size:18px; color:var(--text); margin-bottom:8px; }
+      .no-results p { font-size:14px; }
+
+      /* ── POPUP ── */
+      .popup-overlay {
+        display:none; position:fixed; inset:0;
+        background:var(--overlay); z-index:500;
+        align-items:center; justify-content:center;
+        backdrop-filter:blur(4px);
+      }
+      .popup-overlay.visible { display:flex; }
+      .popup {
+        background:var(--popup-bg); border-radius:16px;
+        width:90%; max-width:680px; overflow:hidden;
+        box-shadow:0 20px 60px rgba(0,0,0,0.3);
+        animation:popIn 0.3s ease;
+      }
+      @keyframes popIn {
+        from { opacity:0; transform:scale(0.9) translateY(20px); }
+        to { opacity:1; transform:scale(1) translateY(0); }
+      }
+      .popup-video {
+        width:100%; aspect-ratio:16/9;
+        display:flex; align-items:center; justify-content:center;
+        font-size:60px; position:relative;
+      }
+      .popup-play-btn {
+        position:absolute; inset:0; display:flex;
+        align-items:center; justify-content:center;
+        background:rgba(0,0,0,0.3); font-size:60px;
+        color:white; cursor:pointer; transition:background 0.2s;
+      }
+      .popup-play-btn:hover { background:rgba(0,0,0,0.1); }
+      .popup-body { padding:24px; }
+      .popup-title {
+        font-size:18px; font-weight:700; color:var(--text);
+        margin-bottom:8px; line-height:1.4;
+      }
+      .popup-meta {
+        display:flex; align-items:center; gap:16px;
+        margin-bottom:16px; flex-wrap:wrap;
+      }
+      .popup-channel { font-size:14px; font-weight:500; color:var(--text-sub); }
+      .popup-views { font-size:13px; color:var(--text-meta); }
+      .popup-actions { display:flex; gap:10px; flex-wrap:wrap; }
+      .popup-action-btn {
+        display:flex; align-items:center; gap:6px;
+        background:var(--hover); border:none; border-radius:20px;
+        padding:8px 16px; cursor:pointer; font-size:13px;
+        font-weight:500; color:var(--text); transition:background 0.2s;
+      }
+      .popup-action-btn:hover { background:var(--border); }
+      .popup-close {
+        position:absolute; top:16px; right:16px;
+        background:rgba(0,0,0,0.5); border:none; border-radius:50%;
+        width:36px; height:36px; cursor:pointer; font-size:18px;
+        color:white; display:flex; align-items:center; justify-content:center;
+        transition:background 0.2s;
+      }
+      .popup-close:hover { background:rgba(0,0,0,0.8); }
+
+      /* ── TOAST ── */
+      .toast {
+        position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+        background:#323232; color:white; padding:12px 24px;
+        border-radius:8px; font-size:14px; font-weight:500;
+        z-index:1000; transition:transform 0.3s ease;
+        white-space:nowrap;
+      }
+      .toast.show { transform:translateX(-50%) translateY(0); }
+    </style>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <header>
+      <div class="header-left">
+        <button class="menu-btn" onclick="toggleSidebar()" title="Menu">☰</button>
+        <a href="#" class="logo">▶ YouTube</a>
+      </div>
+      <div class="header-center">
+        <form class="search-form" onsubmit="handleSearch(event)">
+          <input type="text" id="searchInput" placeholder="Search videos..." autocomplete="off"/>
+          <button type="submit">🔍</button>
+        </form>
+      </div>
+      <div class="header-right">
+        <button class="dark-toggle" onclick="toggleDark()" id="darkBtn">🌙 Dark Mode</button>
+        <button class="icon-btn" title="Notifications">🔔</button>
+        <button class="icon-btn" title="Profile">👤</button>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- SIDEBAR -->
+      <aside id="sidebar">
+        <ul>
+          <li onclick="filterCategory('All')">🏠 Home</li>
+          <li onclick="filterCategory('Explore')">🔥 Explore</li>
+          <li>📺 Subscriptions</li>
+          <li>📚 Library</li>
+          <li>🕐 History</li>
+        </ul>
+        <div class="sidebar-section">EXPLORE</div>
+        <ul>
+          <li onclick="filterCategory('Music')">🎵 Music</li>
+          <li onclick="filterCategory('Gaming')">🎮 Gaming</li>
+          <li onclick="filterCategory('News')">📰 News</li>
+          <li onclick="filterCategory('Sports')">⚽ Sports</li>
+          <li onclick="filterCategory('Cooking')">🍳 Cooking</li>
+        </ul>
+      </aside>
+
+      <!-- MAIN -->
+      <main id="main">
+        <!-- CATEGORY BAR -->
+        <div class="category-bar" id="categoryBar">
+          <button class="category-btn active" onclick="filterCategory('All', this)">All</button>
+          <button class="category-btn" onclick="filterCategory('Music', this)">Music</button>
+          <button class="category-btn" onclick="filterCategory('Gaming', this)">Gaming</button>
+          <button class="category-btn" onclick="filterCategory('News', this)">News</button>
+          <button class="category-btn" onclick="filterCategory('Sports', this)">Sports</button>
+          <button class="category-btn" onclick="filterCategory('Cooking', this)">Cooking</button>
+          <button class="category-btn" onclick="filterCategory('Travel', this)">Travel</button>
+          <button class="category-btn" onclick="filterCategory('Education', this)">Education</button>
+          <button class="category-btn" onclick="filterCategory('Movies', this)">Movies</button>
+          <button class="category-btn" onclick="filterCategory('Fashion', this)">Fashion</button>
+        </div>
+
+        <!-- SEARCH RESULT BAR -->
+        <div class="search-result-bar" id="searchResultBar">
+          <span class="search-result-text">Results for: <span id="searchKeyword"></span></span>
+          <button class="clear-search" onclick="clearSearch()">✕ Clear</button>
+        </div>
+
+        <!-- VIDEO GRID -->
+        <div class="video-grid" id="videoGrid">
+
+          <div class="video-card" data-category="Music" data-title="The Best Music Compilation 2025" data-channel="Music World" data-views="1M views" data-date="1 day ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">12:34</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">The Best Music Compilation 2025</p>
+                <p class="channel-name">Music World</p>
+                <p class="video-meta">1M views • 1 day ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Gaming" data-title="Top 10 Gaming Moments This Week" data-channel="GameZone" data-views="500K views" data-date="3 days ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">8:20</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Top 10 Gaming Moments This Week</p>
+                <p class="channel-name">GameZone</p>
+                <p class="video-meta">500K views • 3 days ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="News" data-title="Breaking News: Technology Update" data-channel="Daily News" data-views="2M views" data-date="1 week ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">24:05</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Breaking News: Technology Update</p>
+                <p class="channel-name">Daily News</p>
+                <p class="video-meta">2M views • 1 week ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Sports" data-title="Amazing Goals of the Season" data-channel="Sports Hub" data-views="300K views" data-date="2 weeks ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">5:47</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Amazing Goals of the Season</p>
+                <p class="channel-name">Sports Hub</p>
+                <p class="video-meta">300K views • 2 weeks ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Cooking" data-title="Easy Korean Recipes for Beginners" data-channel="Cook with Me" data-views="800K views" data-date="3 weeks ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">18:59</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Easy Korean Recipes for Beginners</p>
+                <p class="channel-name">Cook with Me</p>
+                <p class="video-meta">800K views • 3 weeks ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Travel" data-title="Hidden Gems of Europe 2025" data-channel="Travel Vlog" data-views="1.5M views" data-date="1 month ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">3:21</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Hidden Gems of Europe 2025</p>
+                <p class="channel-name">Travel Vlog</p>
+                <p class="video-meta">1.5M views • 1 month ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Education" data-title="Learn Python in 1 Hour" data-channel="Code Academy" data-views="900K views" data-date="2 months ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">45:12</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Learn Python in 1 Hour</p>
+                <p class="channel-name">Code Academy</p>
+                <p class="video-meta">900K views • 2 months ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Fashion" data-title="Spring Fashion Trends 2025" data-channel="Style Guide" data-views="200K views" data-date="3 months ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">7:33</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Spring Fashion Trends 2025</p>
+                <p class="channel-name">Style Guide</p>
+                <p class="video-meta">200K views • 3 months ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Movies" data-title="Top 10 Movies of the Year" data-channel="Cinema World" data-views="5M views" data-date="4 months ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">15:00</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Top 10 Movies of the Year</p>
+                <p class="channel-name">Cinema World</p>
+                <p class="video-meta">5M views • 4 months ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Music" data-title="Lo-Fi Study Beats 24/7" data-channel="Chill Vibes" data-views="700K views" data-date="5 months ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">22:18</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Lo-Fi Study Beats 24/7</p>
+                <p class="channel-name">Chill Vibes</p>
+                <p class="video-meta">700K views • 5 months ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Gaming" data-title="Best Speedrun of 2025" data-channel="Pro Gamer" data-views="400K views" data-date="6 months ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">9:44</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">Best Speedrun of 2025</p>
+                <p class="channel-name">Pro Gamer</p>
+                <p class="video-meta">400K views • 6 months ago</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="video-card" data-category="Education" data-title="How to Build a Website from Scratch" data-channel="Web Dev Pro" data-views="3M views" data-date="7 months ago" onclick="openPopup(this)">
+            <div class="thumbnail"><span class="duration">31:07</span></div>
+            <div class="video-info">
+              <div class="avatar"></div>
+              <div class="video-text">
+                <p class="video-title">How to Build a Website from Scratch</p>
+                <p class="channel-name">Web Dev Pro</p>
+                <p class="video-meta">3M views • 7 months ago</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- No results message -->
+          <div class="no-results" id="noResults">
+            <div class="no-results-icon">🔍</div>
+            <h3>No results found</h3>
+            <p>Try different keywords or clear the search</p>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- POPUP -->
+    <div class="popup-overlay" id="popupOverlay" onclick="closePopupOnOverlay(event)">
+      <div class="popup" id="popup">
+        <div class="popup-video" id="popupThumb">
+          <div class="popup-play-btn" onclick="showToast('▶ Playing video...')">▶</div>
+        </div>
+        <button class="popup-close" onclick="closePopup()">✕</button>
+        <div class="popup-body">
+          <div class="popup-title" id="popupTitle"></div>
+          <div class="popup-meta">
+            <span class="popup-channel" id="popupChannel"></span>
+            <span class="popup-views" id="popupViews"></span>
+            <span class="popup-views" id="popupDate"></span>
+          </div>
+          <div class="popup-actions">
+            <button class="popup-action-btn" onclick="showToast('👍 Liked!')">👍 Like</button>
+            <button class="popup-action-btn" onclick="showToast('💾 Saved!')">💾 Save</button>
+            <button class="popup-action-btn" onclick="showToast('🔗 Link copied!')">🔗 Share</button>
+            <button class="popup-action-btn" onclick="showToast('📋 Added to playlist!')">📋 Add to Playlist</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+      // ── DARK MODE ──
+      function toggleDark() {
+        const html = document.documentElement;
+        const btn = document.getElementById('darkBtn');
+        if (html.getAttribute('data-theme') === 'dark') {
+          html.setAttribute('data-theme', 'light');
+          btn.textContent = '🌙 Dark Mode';
+          showToast('☀️ Light mode on');
+        } else {
+          html.setAttribute('data-theme', 'dark');
+          btn.textContent = '☀️ Light Mode';
+          showToast('🌙 Dark mode on');
+        }
+      }
+
+      // ── SIDEBAR TOGGLE ──
+      let sidebarOpen = true;
+      function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const main = document.getElementById('main');
+        sidebarOpen = !sidebarOpen;
+        if (sidebarOpen) {
+          sidebar.classList.remove('collapsed');
+          main.classList.remove('expanded');
+        } else {
+          sidebar.classList.add('collapsed');
+          main.classList.add('expanded');
+        }
+      }
+
+      // ── CATEGORY FILTER ──
+      function filterCategory(cat, btn) {
+        // Update active button
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        const cards = document.querySelectorAll('.video-card[data-category]');
+        let visible = 0;
+        cards.forEach(card => {
+          if (cat === 'All' || card.dataset.category === cat) {
+            card.classList.remove('hidden');
+            visible++;
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+
+        const noResults = document.getElementById('noResults');
+        noResults.classList.toggle('visible', visible === 0);
+
+        if (cat !== 'All') showToast(`📂 ${cat} category`);
+      }
+
+      // ── SEARCH ──
+      function handleSearch(e) {
+        e.preventDefault();
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+        if (!keyword) { clearSearch(); return; }
+
+        const cards = document.querySelectorAll('.video-card[data-category]');
+        let visible = 0;
+        cards.forEach(card => {
+          const title = card.dataset.title.toLowerCase();
+          const channel = card.dataset.channel.toLowerCase();
+          const cat = card.dataset.category.toLowerCase();
+          if (title.includes(keyword) || channel.includes(keyword) || cat.includes(keyword)) {
+            card.classList.remove('hidden');
+            visible++;
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+
+        document.getElementById('searchKeyword').textContent = `"${keyword}"`;
+        document.getElementById('searchResultBar').classList.add('visible');
+
+        // Reset category buttons
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+
+        const noResults = document.getElementById('noResults');
+        noResults.classList.toggle('visible', visible === 0);
+      }
+
+      function clearSearch() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('searchResultBar').classList.remove('visible');
+        filterCategory('All');
+        document.querySelectorAll('.category-btn')[0].classList.add('active');
+      }
+
+      // ── VIDEO POPUP ──
+      const gradients = [
+        'linear-gradient(135deg,#667eea,#764ba2)',
+        'linear-gradient(135deg,#f093fb,#f5576c)',
+        'linear-gradient(135deg,#4facfe,#00f2fe)',
+        'linear-gradient(135deg,#43e97b,#38f9d7)',
+        'linear-gradient(135deg,#fa709a,#fee140)',
+        'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+        'linear-gradient(135deg,#fd7043,#ff8a65)',
+        'linear-gradient(135deg,#26c6da,#00acc1)',
+        'linear-gradient(135deg,#66bb6a,#43a047)',
+        'linear-gradient(135deg,#ec407a,#e91e63)',
+        'linear-gradient(135deg,#ab47bc,#8e24aa)',
+        'linear-gradient(135deg,#ffca28,#ffb300)',
+      ];
+
+      function openPopup(card) {
+        const title = card.dataset.title;
+        const channel = card.dataset.channel;
+        const views = card.dataset.views;
+        const date = card.dataset.date;
+        const idx = Array.from(document.querySelectorAll('.video-card')).indexOf(card);
+
+        document.getElementById('popupTitle').textContent = title;
+        document.getElementById('popupChannel').textContent = '📺 ' + channel;
+        document.getElementById('popupViews').textContent = '👁 ' + views;
+        document.getElementById('popupDate').textContent = '🕐 ' + date;
+        document.getElementById('popupThumb').style.background = gradients[idx % gradients.length];
+
+        document.getElementById('popupOverlay').classList.add('visible');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closePopup() {
+        document.getElementById('popupOverlay').classList.remove('visible');
+        document.body.style.overflow = '';
+      }
+
+      function closePopupOnOverlay(e) {
+        if (e.target === document.getElementById('popupOverlay')) closePopup();
+      }
+
+      // Close popup with ESC key
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closePopup();
+      });
+
+      // ── TOAST ──
+      let toastTimer;
+      function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+      }
+    </script>
+  </body>
+</html>
